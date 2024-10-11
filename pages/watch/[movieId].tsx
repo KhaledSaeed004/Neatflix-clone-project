@@ -2,15 +2,33 @@ import useMovie from "@/hooks/useMovie";
 import { useRouter } from "next/router";
 import React from "react";
 import { HiOutlineArrowLeft } from "react-icons/hi";
+import dynamic from "next/dynamic";
 
+// Load Vidstack components only on the client side
+const MediaPlayer = dynamic(
+    () => import("@vidstack/react").then((mod) => mod.MediaPlayer),
+    {
+        ssr: false,
+    }
+);
+const MediaProvider = dynamic(
+    () => import("@vidstack/react").then((mod) => mod.MediaProvider),
+    {
+        ssr: false,
+    }
+);
+const DefaultVideoLayout = dynamic(
+    () =>
+        import("@vidstack/react/player/layouts/default").then(
+            (mod) => mod.DefaultVideoLayout
+        ),
+    { ssr: false }
+);
+import { defaultLayoutIcons } from "@vidstack/react/player/layouts/default";
+
+// Import Vidstack styles (safe to keep outside dynamic as styles don't affect SSR)
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
-
-import { MediaPlayer, MediaProvider } from "@vidstack/react";
-import {
-    defaultLayoutIcons,
-    DefaultVideoLayout,
-} from "@vidstack/react/player/layouts/default";
 
 function Watch() {
     const router = useRouter();
@@ -28,13 +46,15 @@ function Watch() {
                     <span className="font-light">Watching:</span> {data?.title}
                 </p>
             </nav>
-            <MediaPlayer title={data?.title} src={data?.videoUrl} autoPlay>
-                <MediaProvider />
-                <DefaultVideoLayout
-                    thumbnails={data?.thumbnailUrl}
-                    icons={defaultLayoutIcons}
-                />
-            </MediaPlayer>
+            {data?.videoUrl && (
+                <MediaPlayer title={data?.title} src={data?.videoUrl} autoPlay>
+                    <MediaProvider />
+                    <DefaultVideoLayout
+                        thumbnails={data?.thumbnailUrl}
+                        icons={defaultLayoutIcons}
+                    />
+                </MediaPlayer>
+            )}
         </div>
     );
 }
